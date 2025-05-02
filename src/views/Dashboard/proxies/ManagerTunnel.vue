@@ -48,7 +48,7 @@
           <NCard v-for="proxy in filteredProxies" :key="proxy.proxyId" class="proxy-card">
             <div class="proxy-header">
               <h3 class="proxy-title">
-                {{ proxy.proxyName }}
+              隧道: {{ proxy.proxyName }}
               </h3>
               <div class="status-tags">
                 <NTag :type="proxy.isOnline ? 'success' : 'error'" size="small">
@@ -71,7 +71,9 @@
               </div>
               <div class="info-item">
                 <span class="label">协议:</span>
-                <span class="value">{{ proxy.proxyType.toUpperCase() }}</span>
+                <NTag :type="proxy.proxyType === 'http' || proxy.proxyType === 'https' ? 'warning' : 'success'" size="small">
+                  <span class="value">{{ proxy.proxyType.toUpperCase() }}</span>
+                </NTag>
               </div>
               <div class="info-item">
                 <span class="label">
@@ -105,6 +107,7 @@
                   更多
                 </NButton>
               </NDropdown>
+              <NSwitch :loading :value="proxy.isOnline" @click="handleStarProxy(proxy)" style="margin-top: 2px;" />
             </div>
           </NCard>
         </template>
@@ -1163,7 +1166,40 @@ const columns = [
     }
   }
 ]
-
+const handleStarProxy = async (proxy: Proxy) => {
+  try {
+    loading.value = true;
+    if (!proxy.isOnline) {
+      const success = await invoke('start_proxy', {
+        proxyId: proxy.proxyId,
+        token: token.value.token
+      });
+      
+      if (success) {
+        proxy.isOnline = true;
+        message.success('隧道启动成功');
+        // 更新隧道状态
+      }
+    } else {
+      const success = await invoke('stop_proxy', { 
+        proxyId: proxy.proxyId 
+      });
+      
+      if (success) {
+        proxy.isOnline = false;
+        message.success('隧道停止成功');
+      }
+    }
+  } catch (error) {
+    message.error(`操作失败: ${error}`);
+    console.error('隧道操作失败:', error);
+  } finally {
+    loading.value = false;
+    setTimeout(() => {
+      handleRefresh();
+    }, 500);
+  }
+}
 </script>
 
 <style lang="scss" scoped>

@@ -86,10 +86,9 @@ const checkUpdate = async () => {
         duration: 0,
         // 出现几秒时间
         closable: true,
-        onClose: () => {
-          
-        }
       });
+    }else {
+      message.success('当前已是最新版本');
     }
   } catch (e) {
     console.error('检查更新错误:', e);
@@ -189,7 +188,18 @@ const downloadFrpc = async () => {
 const getFrpcVersion = async () => {
   try {
     const result = await invoke('get_frpc_cli_version');
-    const frpcInfo = JSON.parse(result as string);
+    let frpcInfo;
+    try {
+      frpcInfo = JSON.parse(result as string);
+    } catch (e) {
+      console.error('解析失败，原始数据:', result); // 记录原始响应
+      throw new Error(`数据解析失败: ${e.message}`);
+    }
+    
+    // 添加字段验证
+    if (!frpcInfo?.version || typeof frpcInfo.version !== 'string') {
+      throw new Error('无效的版本信息格式');
+    }
     if (frpcInfo.version === "未知") {
       logs.value += `${new Date().toLocaleTimeString()} [系统] 未找到Frpc\n`;
       message.warning('Frpc可执行文件不存在，请配置或下载');

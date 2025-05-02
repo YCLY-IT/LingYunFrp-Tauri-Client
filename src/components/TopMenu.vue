@@ -20,7 +20,8 @@
         </NPopover>
         <h2 class="logo" style="margin-left: 20px;">LingYunFRP</h2>
       </div>
-      <div class="the-right" style="margin-left: 680px;">
+      <div class="right" style="transform: translateX(-35px); text-align: center;">
+        <div class="the-right" style="margin-right: 15px;">
         <NDropdown :options="options" @select="handleUserMenuSelect" trigger="hover">
           <NButton text>
             <template #icon>
@@ -34,10 +35,10 @@
           </NButton>
         </NDropdown>
       </div>
-      <div class="right" style="transform: translateX(-25px)">
+        <div class="theme-switch" style="margin-top: 6px;">
         <!-- 客户端关闭按钮、全屏、刷新和最小化按钮 -->
          <NButton text @click="handleToRefresh">
-          <NIcon size="32" style="margin-right: 15px;">
+          <NIcon size="28" style="margin-right: 15px;">
             <RefreshOutline />
           </NIcon>
          </NButton>
@@ -47,15 +48,16 @@
           </NIcon>
          </NButton text>
          <NButton text style="margin-right: 12px;" @click="handleToMaximize">
-          <NIcon size="28">
+          <NIcon size="27">
             <ScanOutline />
           </NIcon>
          </NButton>
           <NButton text @click="ToClose = true">
-            <NIcon size="35">
+            <NIcon size="28">
               <CloseOutline />
             </NIcon>
           </NButton>
+        </div>
       </div>
     </div>
   </NLayoutHeader>
@@ -262,6 +264,10 @@ onUnmounted(() => {
 }
 .nikename {
   margin-left: 3px;
+  max-width: 70px;  /* 新增：限制最大宽度 */
+  white-space: nowrap;  /* 新增：防止换行 */
+  overflow: hidden;  /* 新增：隐藏溢出内容 */
+  text-overflow: ellipsis;  /* 新增：显示省略号 */
 }
 
 

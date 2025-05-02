@@ -153,7 +153,7 @@ const checkFrpcHas = async () => {
     if (!hasFrpc) {
       window.$notification?.error({
         title: 'frpc.exe不存在',
-        content: '请下载并安装frpc.exe',
+        content: '请到系统设置下载frpc.exe',
         duration: 0,
         closable: true,
       });
@@ -161,10 +161,10 @@ const checkFrpcHas = async () => {
         await invoke('emit_event', {
           event: 'log',
           payload: {
-            message: `frpc.exe不存在，请下载并安装frpc.exe`,
+            message: `frpc.exe不存在，请到系统设置下载frpc.exe`,
           }
         });
-        appendLog('frpc.exe不存在，请下载并安装frpc.exe')
+        appendLog('frpc.exe不存在，请到系统设置中下载frpc.exe')
       }, 500)
     
     }

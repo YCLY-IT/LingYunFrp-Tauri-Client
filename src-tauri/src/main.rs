@@ -6,9 +6,12 @@ use tauri::tray::{TrayIcon, TrayIconBuilder};
 use tauri::Runtime;
 use tauri::Emitter;
 use tauri::command;
+use std::collections::HashMap;
+use std::sync::Mutex;
 
 #[tauri::command]
 fn close_window(window: tauri::Window) {
+    kill_all_processes().unwrap();
     window.close().unwrap();
 }
 
@@ -34,6 +37,7 @@ fn hide_to_tray(window: tauri::Window) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 fn main() {
     tauri::Builder::default()
+    .manage(Mutex::new(HashMap::<u32, std::process::Child>::new()))
     .plugin(tauri_plugin_notification::init())
     .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
@@ -50,9 +54,17 @@ fn main() {
             download_frpc,
             toggle_auto_start,
             kill_all_processes,
-            get_cpl_version
+            get_cpl_version,
+            start_proxy,
+            stop_proxy
         ])
         .setup(|app| {
+            // 确保应用数据目录存在
+            let app_data_dir = app.path().app_data_dir().unwrap();
+            if !app_data_dir.exists() {
+                std::fs::create_dir_all(&app_data_dir).unwrap();
+            }
+            
             create_tray_menu(app)?;
             let window = app.get_webview_window("main").unwrap();
             window.set_decorations(false).unwrap();
@@ -63,7 +75,6 @@ fn main() {
 
                 }
             });
-
             #[cfg(target_os = "windows")]
             window.set_ignore_cursor_events(false).unwrap();
 
@@ -82,9 +93,18 @@ fn create_tray_menu(app: &tauri::App) -> Result<TrayIcon, Box<dyn std::error::Er
         ],
     )?;
 
+    let _app_handle = app.handle().clone();
     let tray = TrayIconBuilder::new()
         .menu(&menu)
         .icon(app.default_window_icon().unwrap().clone())
+        .on_tray_icon_event(move |tray, event| {
+            if let tauri::tray::TrayIconEvent::Click { button: tauri::tray::MouseButton::Left, .. } = event {
+                if let Some(window) = tray.app_handle().get_webview_window("main") {
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                }
+            }
+        })
         .on_menu_event(move |app, event| match event.id.as_ref() {
             "show" => {
                 if let Some(window) = app.get_webview_window("main") {
@@ -93,6 +113,7 @@ fn create_tray_menu(app: &tauri::App) -> Result<TrayIcon, Box<dyn std::error::Er
                 }
             }
             "quit" => {
+                kill_all_processes().unwrap();
                 app.exit(0);
             }
             _ => {}
@@ -191,23 +212,6 @@ async fn download_frpc(app: tauri::AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
-async fn get_frpc_cli_version(app: tauri::AppHandle) -> Result<String, String> {
-    let app_data_dir = app.path().app_data_dir().map_err(|_| "无法获取应用数据目录")?;
-    let frpc_path = app_data_dir.join("frpc.exe");
-    if !frpc_path.exists() {
-        return Err("frpc.exe不存在".to_string());
-    }
-    
-    let output = std::process::Command::new(frpc_path)
-        .arg("--version")
-        .output()
-        .map_err(|e| format!("获取版本失败: {}", e))?;
-    
-    let version_str = String::from_utf8_lossy(&output.stdout);
-    Ok(version_str.trim().to_string())
-}
-
-#[tauri::command]
 async fn toggle_auto_start(_enable: bool) -> Result<(), String> {
     // TODO: 实现开机自启动设置
     Ok(())
@@ -219,17 +223,97 @@ fn get_cpl_version() -> String {
 }
 
 #[tauri::command]
-async fn kill_all_processes() -> Result<(), String> {
-    // 终止所有frpc进程
+fn kill_all_processes() -> Result<(), String> {
+    let _output = std::process::Command::new("taskkill")
+        .arg("/F")
+        .arg("/IM")
+        .arg("frpc.exe")
+        .output()
+        .map_err(|e| format!("终止进程失败: {}", e))?;
+    Ok(())
+}
+
+#[tauri::command]
+async fn start_proxy(
+    app: tauri::AppHandle,
+    proxy_id: u32,
+    token: String,
+) -> Result<bool, String> {
+    let app_data_dir = app.path().app_data_dir().map_err(|_| "无法获取应用数据目录")?;
+    let frpc_path = app_data_dir.join("frpc.exe");
     
-        let output = std::process::Command::new("taskkill")
-            .arg("/F")
-            .arg("/IM")
-            .arg("frpc.exe")
-            .output()
-            .map_err(|e| format!("终止进程失败: {}", e))?;
-        if !output.status.success() {
-            return Err("终止进程失败".to_string());
+    if !frpc_path.exists() {
+        return Err("frpc.exe 不存在".to_string());
+    }
+
+    let mut command = std::process::Command::new(&frpc_path);
+    
+    command
+        .arg("-t")
+        .arg(token)
+        .arg("-p")
+        .arg(proxy_id.to_string());
+
+    let child = command.spawn().map_err(|e| format!("启动隧道失败: {}", e))?;
+    
+    // 保存进程ID以便后续管理
+    app.state::<Mutex<HashMap<u32, std::process::Child>>>()
+        .lock()
+        .unwrap()
+        .insert(proxy_id, child);
+
+    Ok(true)
+}
+
+#[tauri::command]
+async fn stop_proxy(app: tauri::AppHandle, proxy_id: u32) -> Result<bool, String> {
+    let processes = app.state::<Mutex<HashMap<u32, std::process::Child>>>();
+    let mut processes = processes.lock().unwrap();
+    
+    if let Some(mut child) = processes.remove(&proxy_id) {
+        child.kill().map_err(|e| format!("停止隧道失败: {}", e))?;
+        Ok(true)
+    } else {
+        Err("未找到对应的隧道进程".to_string())
+    }
+}
+
+#[tauri::command]
+fn get_frpc_cli_version(app: tauri::AppHandle) -> Result<String, String> {
+    // 获取frpc可执行文件路径
+    let frpc_path = {
+        let app_data_dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
+        let data_path = app_data_dir.join("frpc.exe");
+        
+        if data_path.exists() {
+            data_path
+        } else if let Ok(exe_dir) = std::env::current_exe() {
+            let exe_path = exe_dir.parent()
+                .ok_or("无法获取父目录")?
+                .join("frpc.exe");
+            exe_path
+        } else {
+            return Err("frpc executable not found".into());
         }
-        Ok(())
+    };
+
+    // 克隆路径用于后续使用
+    let frpc_path_clone = frpc_path.clone();
+
+    let output = std::process::Command::new(frpc_path)
+        .arg("--version")
+        .output()
+        .map_err(|e| format!("执行失败: {}", e))?;
+
+    // 添加版本变量声明
+    let version = String::from_utf8(output.stdout)
+        .map(|v| v.trim().replace(['\r', '\n'], ""))
+        .map_err(|e| format!("编码错误: {}", e))?;
+
+    // 使用克隆的路径
+    Ok(serde_json::json!({
+        "code": 0,
+        "version": version,
+        "path": frpc_path_clone.to_string_lossy().replace('\\', "\\\\")
+    }).to_string())
 }

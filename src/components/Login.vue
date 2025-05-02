@@ -1,5 +1,5 @@
 <template>
-  <div class="login">
+  <div class="login" data-tauri-drag-region>
     <NCard class="auth-card">
       <div class="auth-header">
         <div class="title-with-icon">
@@ -33,6 +33,20 @@
   </div>
 </template>
 
+<style lang="scss" scoped>
+.login {
+  background-image: url('https://dailybing.com/api/v1');
+  height: 100vh;
+  display: flex;
+  -webkit-app-region: drag; /* 添加这一行启用拖动 */
+}
+
+/* 确保表单元素不被拖动区域覆盖 */
+.n-form, .n-button {
+  -webkit-app-region: no-drag;
+}
+</style>
+
 
 
 
@@ -42,6 +56,7 @@ import { useRouter } from 'vue-router'
 import { NForm, NFormItem, NInput, NButton, NCard, NIcon, type FormRules, useMessage, type FormInst } from 'naive-ui'
 import { LogInOutline } from '@vicons/ionicons5'
 import { userApi } from '../net'
+import TopMenu from './TopMenu.vue'
 
 const router = useRouter()
 const message = useMessage()
