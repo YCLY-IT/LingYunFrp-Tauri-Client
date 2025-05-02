@@ -1,6 +1,7 @@
 import { h, Component, ref } from 'vue'
-import { HomeOutline, AddCircleOutline, AppsOutline, DownloadOutline, IdCardOutline, StatsChartOutline, PeopleOutline, CloudyOutline, ConstructOutline, WalletOutline, BuildOutline, PricetagsOutline, SettingsOutline } from '@vicons/ionicons5'
+import { HomeOutline, AddCircleOutline, AppsOutline, IdCardOutline,  WalletOutline, SettingsOutline } from '@vicons/ionicons5'
 import { NIcon, type MenuOption } from 'naive-ui'
+import { SquareTerminal } from 'lucide-vue-next';
 
 const baseMenuOptions: MenuOption[] = [
   {
@@ -43,6 +44,18 @@ const baseMenuOptions: MenuOption[] = [
     key: 'cash',
     icon: renderIcon(WalletOutline),
     link: '/dashboard/cash',
+  },
+  {
+    label: '日志',
+    icon: renderIcon(SquareTerminal),
+    key: 'logs',
+    link: '/dashboard/logs',
+  },
+  {
+    label: '系统设置',
+    icon: renderIcon(SettingsOutline),
+    key:'settings',
+    link: '/dashboard/settings',
   },
 ]
 export function getMenuOptions(): MenuOption[] {

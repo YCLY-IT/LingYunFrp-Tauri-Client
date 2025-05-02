@@ -1,31 +1,4 @@
 <template>
-  <!-- PC端导航栏 -->
-  <NLayoutHeader bordered class="navbar pc-navbar" style="user-select: none">
-    <div class="navbar-content">
-      <div class="logo">
-        <RouterLink to="/" class="logo-link">
-          <h2>LingYunFRP</h2>
-        </RouterLink>
-      </div>
-
-      <!-- 桌面端菜单 -->
-      <div class="nav-links">
-        <NSpace class="desktop-menu">
-          <NSwitch size="small" :value="isDarkMode" @update:value="toggleTheme" :rail-style="switchButtonRailStyle">
-            <template #checked>
-              <NIcon :component="Moon" />
-            </template>
-            <template #unchecked>
-              <NIcon :component="Sunny" />
-            </template>
-          </NSwitch>
-          <RouterLink to="/dashboard">
-            <NButton secondary type="primary">管理面板</NButton>
-          </RouterLink>
-        </NSpace>
-      </div>
-    </div>
-  </NLayoutHeader>
 
   <!-- 移动端导航栏 -->
   <NLayoutHeader bordered class="navbar mobile-navbar" style="user-select: none">
@@ -65,17 +38,9 @@ import {
   ShieldCheckmarkOutline,
   DocumentLockOutline
 } from '@vicons/ionicons5'
-import { switchButtonRailStyle } from '../constants/theme'
 
 const showMenu = ref(false)
 const router = useRouter()
-const { isDarkMode, toggleTheme } = inject('theme', {
-  isDarkMode: ref(false),
-  toggleTheme: () => { }
-}) as {
-  isDarkMode: Ref<boolean>
-  toggleTheme: () => void
-}
 
 function renderIcon(icon: any) {
   return () => h(NIcon, null, { default: () => h(icon) })

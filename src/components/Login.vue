@@ -66,6 +66,14 @@ const rules: FormRules = {
 }
 
 const handleSubmit = async () => {
+if (!formValue.value.username) {
+    message.error('请输入用户名')
+    return
+  }
+  if (!formValue.value.password) {
+    message.error('请输入密码')
+    return
+  }
   userApi.login(
       formValue.value.username,
       formValue.value.password,

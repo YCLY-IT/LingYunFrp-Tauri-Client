@@ -410,15 +410,6 @@
       </div>
       <template #action>
         <NButton size="small" @click="showConfigModal = false">关闭</NButton>
-        <NButton v-if="expandedNames.includes('config')" size="small" secondary type="info"
-                 @click="handleDownloadConfig">
-          <template #icon>
-            <NIcon>
-              <DownloadOutline />
-            </NIcon>
-          </template>
-          下载配置
-        </NButton>
         <NButton size="small" type="primary" @click="handleCopyConfig" :disabled="expandedNames.length === 0">
           <template #icon>
             <NIcon>
@@ -453,6 +444,7 @@ import { switchButtonRailStyle } from '../../../constants/theme'
 import { useRouter } from 'vue-router'
 import {userApi} from "../../../net";
 import {accessHandle} from "../../../net/base.ts";
+import { invoke } from '@tauri-apps/api/core'
 
 const isIPAddress = (hostname: string) => {
   const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/
@@ -489,6 +481,7 @@ const showModal = ref(false)
 const selectedProxy = ref<Proxy | null>(null)
 const showEditModal = ref(false)
 const editFormRef = ref<FormInst | null>(null)
+
 const editForm = ref({
   proxyId: 0,
   proxyName: '',
@@ -1021,6 +1014,18 @@ const handleDomainsUpdate = (tags: string[]) => {
   editForm.value.domain = JSON.stringify(tags)
 }
 
+const checkFrpcHas = async () => {
+  try {
+    const hasFrpc = await invoke<boolean>('check_frpc_exists')
+    if (!hasFrpc) {
+      message.warning('未检测到frpc.exe，请确保已正确安装客户端')
+    }
+  } catch (error) {
+    console.error('检查frpc.exe失败:', error)
+  }
+}
+
+checkFrpcHas()
 const renderDomainTag = (tag: string) => {
   return h(
       NTag,
@@ -1159,55 +1164,6 @@ const columns = [
   }
 ]
 
-const handleDownloadConfig = () => {
-  let content = ''
-  let fileName = ''
-  let fileExt = ''
-
-  switch (configFormat.value) {
-    case 'toml':
-      content = tomlContent.value
-      fileExt = 'toml'
-      break
-    case 'ini':
-      content = iniContent.value
-      fileExt = 'ini'
-      break
-    case 'json':
-      content = jsonContent.value
-      fileExt = 'json'
-      break
-    case 'yml':
-      content = ymlContent.value
-      fileExt = 'yml'
-      break
-  }
-
-  if (!content) {
-    message.error('配置内容为空，无法下载')
-    return
-  }
-
-  fileName = `config_${selectedProxy.value?.proxyId || 'config'}.${fileExt}`
-
-  // 创建 Blob 对象
-  const blob = new Blob([content], { type: 'text/plain' })
-
-  // 创建下载链接
-  const downloadLink = document.createElement('a')
-  downloadLink.href = URL.createObjectURL(blob)
-  downloadLink.download = fileName
-
-  // 模拟点击下载
-  document.body.appendChild(downloadLink)
-  downloadLink.click()
-
-  // 清理
-  document.body.removeChild(downloadLink)
-  URL.revokeObjectURL(downloadLink.href)
-
-  message.success(`配置文件已下载: ${fileName}`)
-}
 </script>
 
 <style lang="scss" scoped>

@@ -94,6 +94,22 @@ const router = createRouter({
             title: '增值服务',
           }
         },
+        {
+          path: 'logs',
+          name: 'logs',
+          component: () => import('../views/Dashboard/Log.vue'),
+          meta: {
+            title: '日志',
+          }
+        },
+        {
+          path: 'settings',
+          name:'settings',
+          component: () => import('../views/Dashboard/Settings.vue'),
+          meta: {
+              title: '设置',
+          }
+        },
       ]
     },
     {

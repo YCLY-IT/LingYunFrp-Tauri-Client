@@ -1,12 +1,25 @@
-import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
+import { ref } from 'vue'
 
-export const useCounterStore = defineStore('counter', () => {
-  const count = ref(0)
-  const doubleCount = computed(() => count.value * 2)
-  function increment() {
-    count.value++
+export const useLinkTunnelsStore = defineStore('linkTunnels', () => {
+  const linkLaunchedTunnels = ref<Set<string>>(new Set())
+
+  const addLinkTunnel = (tunnelId: string) => {
+    linkLaunchedTunnels.value.add(tunnelId)
   }
 
-  return { count, doubleCount, increment }
-})
+  const removeLinkTunnel = (tunnelId: string) => {
+    linkLaunchedTunnels.value.delete(tunnelId)
+  }
+
+  const clearLinkTunnels = () => {
+    linkLaunchedTunnels.value.clear()
+  }
+
+  return {
+    linkLaunchedTunnels,
+    addLinkTunnel,
+    removeLinkTunnel,
+    clearLinkTunnels
+  }
+}) 

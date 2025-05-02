@@ -47,7 +47,7 @@ marked.setOptions({
 })
 
 const goToRealname = () => {
-  router.push('/dashboard/profile')
+  router.push('/dashboard/user/profile')
 }
 
 const renderedNotice = computed(() => {
