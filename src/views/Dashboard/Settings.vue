@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, h } from 'vue'
+import { ref, onMounted } from 'vue'
 import {
   useMessage,
   useDialog,
@@ -8,7 +8,6 @@ import {
   NLog,
   NSpace,
   NAlert,
-  NForm,
   NFormItem,
   NSwitch,
   NInput,
@@ -17,26 +16,13 @@ import {
   NPopconfirm,
   NText,
   NScrollbar,
-  NTooltip,
   NDrawer,
   NDrawerContent,
-  NThing,
-  NIcon,
-  NH3,
-  NStep,
-  NSteps
+
 } from 'naive-ui'
 import { onBeforeRouteLeave } from 'vue-router'
-import { HelpCircleOutline } from '@vicons/ionicons5'
 import { invoke } from '@tauri-apps/api/core'
-import { register, unregister, isRegistered } from '@tauri-apps/plugin-deep-link'
-import numbro from 'numbro';
 
-const byteFormat = (num: number) => {
-  return numbro(num * 1024 * 8)
-    .format({ output: 'byte', base: 'general' })
-    .replace('B', 'b');
-};
 
 const message = useMessage();
 const dialog = useDialog();
@@ -48,7 +34,6 @@ const checking = ref(false);
 const autoStart = ref(false);
 const autoRestoreTunnels = ref(true);
 const deepLinkEnabled = ref(false);
-const helpDrawerVisible = ref(false);
 const activeNames = ref<string[]>(['2']);
 
 const getCurrentVersion = async () => {
@@ -70,6 +55,7 @@ const checkUpdate = async () => {
       data: {
         current_version: string;
         latest_info: {
+          data: any
           version: string;
           download_url: string;
           release_notes: string;
@@ -80,11 +66,10 @@ const checkUpdate = async () => {
     }>('check_update');
 
     if (updateInfo.data.current_version !== updateInfo.data.latest_info.data.latest_info.version) {
-      window.$notification?.info({
+      (window as any).$notification?.success({
         title: `新版本 ${updateInfo.data.latest_info.data.latest_info.version} 可用`,
         content: updateInfo.data.latest_info.data.latest_info.release_notes,
         duration: 0,
-        // 出现几秒时间
         closable: true,
       });
     }else {
@@ -127,31 +112,6 @@ const toggleAutoRestoreTunnels = (value: boolean) => {
   }
 };
 
-const toggleDeepLink = async (value: boolean) => {
-  try {
-    if (navigator.platform.includes('Win') || navigator.platform.includes('Linux')) {
-      if (value) {
-        await register('lyfrp');
-        message.success('启用快速启动功能成功');
-      } else {
-        await unregister('lyfrp');
-        message.success('禁用快速启动功能成功');
-      }
-    }
-  } catch (e) {
-    message.error(`设置快速启动功能失败: ${e}`);
-  }
-};
-
-const helpDrawer = (type: string) => {
-  helpDrawerVisible.value = true;
-};
-
-interface CplUpdate {
-  title: string;
-  latest: string;
-  msg: string;
-}
 
 onBeforeRouteLeave((_to, _from, next) => {
   if (downloading.value) {
@@ -193,7 +153,7 @@ const getFrpcVersion = async () => {
       frpcInfo = JSON.parse(result as string);
     } catch (e) {
       console.error('解析失败，原始数据:', result); // 记录原始响应
-      throw new Error(`数据解析失败: ${e.message}`);
+      throw new Error(`数据解析失败: ${e instanceof Error ? e.message : String(e)}`);
     }
     
     // 添加字段验证
@@ -332,28 +292,13 @@ onMounted(async () => {
                     </n-collapse-item>
                     <n-collapse-item title="启动设置" name="3">
                     <n-space vertical>
-                        <n-space align="center">
+                        <n-space style="display: flex; margin-bottom: 10px; margin-top: 5px;">
                         <n-switch v-model:value="autoStart" @update:value="toggleAutoStart" />
                         <span>开机自启动</span>
                         </n-space>
-                        <n-space align="center" v-if="autoStart">
+                        <n-space style="display: flex;" v-if="autoStart">
                         <n-switch v-model:value="autoRestoreTunnels" @update:value="toggleAutoRestoreTunnels" />
                         <span>开机时恢复上次运行的隧道</span>
-                        </n-space>
-                        <n-space align="center">
-                        <n-tooltip trigger="hover">
-                            <template #trigger>
-                            <n-switch v-model:value="deepLinkEnabled" @update:value="toggleDeepLink" />
-                            </template>
-                            允许通过"快速启动"链接启动隧道
-                        </n-tooltip>
-                        <span>启用"快速启动"功能 </span><n-button quaternary circle @click="helpDrawer('quickstart')">
-                            <template #icon>
-                            <n-icon>
-                                <HelpCircleOutline />
-                            </n-icon>
-                            </template>
-                        </n-button>
                         </n-space>
                     </n-space>
                     </n-collapse-item>
@@ -361,24 +306,6 @@ onMounted(async () => {
                 </n-space>
             </n-card>
             </n-space>
-
-            <n-drawer v-model:show="helpDrawerVisible" width="40%" placement="right">
-            <n-drawer-content closable>
-                <template #header>
-                功能帮助指南
-                </template>
-                <n-thing v-if="helpDrawerContent === 'quickstart'">
-                <n-h3>快速启动</n-h3>
-                <n-text>
-                    快速启动 是一种基于注册链接(deep link)快速启动隧道的方式
-                    <br />通过在面板简单的点击链接，即可快速启动隧道
-                    <br />
-                    <br />
-                    * 通过"快速启动"功能启动的隧道无法开机自启动
-                </n-text>
-                </n-thing>
-            </n-drawer-content>
-            </n-drawer>
 
             <n-drawer v-model:show="manualModeVisible" :width="600" placement="right">
             <n-drawer-content title="手动配置 Frpc 可执行文件" closable>

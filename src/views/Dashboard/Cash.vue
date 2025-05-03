@@ -160,7 +160,7 @@ const fetchProducts = () => {
     } else {
       message.error(data.message)
     }
-  }, (messageText, code, url) => {
+  }, (messageText) => {
     message.error(messageText)
   }, (err) => {
     message.error(err.message)
@@ -207,7 +207,7 @@ const handleBuy = (product) => {
     } else {
       message.error(data.message)
     }
-  }, (messageText, code, url) => {
+  }, (messageText) => {
     message.error(messageText)
   }, (err) => {
     message.error(err.message)

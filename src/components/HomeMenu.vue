@@ -1,4 +1,50 @@
 <template>
+  <!-- PC端导航栏 -->
+  <NLayoutHeader bordered class="navbar pc-navbar" style="user-select: none" data-tauri-drag-region>
+    <div class="navbar-content">
+      <div class="logo" style="margin-left: 20px;">
+        <RouterLink to="/" class="logo-link">
+          <h2>LingYunFRP</h2>
+        </RouterLink>
+      </div>
+
+      <!-- 桌面端菜单 -->
+      <div class="nav-links">
+        <NSpace class="desktop-menu">
+          <NSwitch size="small" style="margin-right: 15px;" :value="isDarkMode" @update:value="toggleTheme" :rail-style="switchButtonRailStyle">
+            <template #checked>
+              <NIcon :component="Moon" />
+            </template>
+            <template #unchecked>
+              <NIcon :component="Sunny" />
+            </template>
+          </NSwitch>
+          <div class="control" style="margin-right: 0px; transform: translateY(2.5px);">
+            <NButton text @click="handleToRefresh">
+          <NIcon size="28" style="margin-right: 15px;">
+            <RefreshOutline />
+          </NIcon>
+         </NButton>
+         <NButton text @click="handleToMinimize">
+          <NIcon size="28" style="margin-right: 22px;">
+            <RemoveOutline />
+          </NIcon>
+         </NButton text>
+         <NButton text style="margin-right: 12px;" @click="handleToMaximize">
+          <NIcon size="27">
+            <ScanOutline />
+          </NIcon>
+         </NButton>
+          <NButton text @click="ToClose = true">
+            <NIcon size="28">
+              <CloseOutline />
+            </NIcon>
+          </NButton>
+        </div>
+        </NSpace>
+      </div>
+    </div>
+  </NLayoutHeader>
 
   <!-- 移动端导航栏 -->
   <NLayoutHeader bordered class="navbar mobile-navbar" style="user-select: none">
@@ -22,13 +68,24 @@
       </div>
     </div>
   </NLayoutHeader>
+  <NModal v-model:show="ToClose" preset="dialog"  style="width: 400px">
+      <template #header>
+        你确定要关闭吗?
+      </template>
+        你也可以同样点击右上角的X图标来关闭当前弹窗。
+        <br>
+      <template #action>
+        <NButton size="small" @click="handleToClose">确定</NButton>
+        <NButton size="small" type="primary" @click="handleToCloseToPanel">最小化托盘</NButton>
+      </template>
+  </NModal>
 </template>
 
 <script setup lang="ts">
 import { h, inject, Ref, ref } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
-import { NLayoutHeader, NButton, NSpace, NSwitch, NIcon, NPopover, NMenu, MenuOption } from 'naive-ui'
-import { MenuOutline, Moon, Sunny } from '@vicons/ionicons5'
+import { NLayoutHeader, NButton, NSpace, NSwitch, NIcon, NPopover, NMenu, MenuOption, NModal } from 'naive-ui'
+import { MenuOutline, Moon, RefreshOutline, Sunny, RemoveOutline, ScanOutline, CloseOutline } from '@vicons/ionicons5'
 import {
   HomeOutline,
   DocumentTextOutline,
@@ -38,9 +95,45 @@ import {
   ShieldCheckmarkOutline,
   DocumentLockOutline
 } from '@vicons/ionicons5'
+import { switchButtonRailStyle } from '../constants/theme'
+import { invoke } from '@tauri-apps/api/core'
 
 const showMenu = ref(false)
 const router = useRouter()
+const ToClose = ref(false)
+const { isDarkMode, toggleTheme } = inject('theme', {
+  isDarkMode: ref(false),
+  toggleTheme: () => { }
+}) as {
+  isDarkMode: Ref<boolean>
+  toggleTheme: () => void
+}
+
+const handleToRefresh = () => {
+  router.go(0)
+}
+
+const handleToClose = async () => {
+  await invoke('quit_window');
+}
+
+const handleToMinimize = async () => {
+  await invoke('minimize_window');
+}
+
+const handleToMaximize = async () => {
+  await invoke('toggle_maximize');
+}
+
+
+const handleToCloseToPanel = async () => {
+  ToClose.value = false
+  new Notification('FRP客户端', {
+    body: 'FRP客户端已最小化到托盘',
+    silent: true,
+  })
+  await invoke('hide_to_tray');
+}
 
 function renderIcon(icon: any) {
   return () => h(NIcon, null, { default: () => h(icon) })
@@ -124,4 +217,11 @@ function handleMenuSelect(key: string) {
 
 <style lang="scss" scoped>
 @use '../assets/styles/components/homeMenu.scss' as *;
+.navbar {
+  -webkit-app-region: drag; /* 添加这一行启用拖动 */
+}
+/* 确保表单元素不被拖动区域覆盖 */
+.n-form, .n-button {
+  -webkit-app-region: no-drag;
+}
 </style>

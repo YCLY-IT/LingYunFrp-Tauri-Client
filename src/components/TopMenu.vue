@@ -93,7 +93,6 @@ import { getMenuOptions, renderIcon, defaultExpandedKeys } from '../shared/menuO
 import LeftMenu from './LeftMenu.vue'
 import { userApi } from "../net";
 import { accessHandle, removeToken } from "../net/base.ts";
-import { getCurrentWindow } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/core'
 
 const router = useRouter()
@@ -102,13 +101,13 @@ const showMenu = ref(false)
 const menuOptions = ref(getMenuOptions())
 const dialog = useDialog()
 const message = useMessage()
-const nickname = localStorage.getItem('nickname')
 const showMobileMenu = ref(false)
 const ToClose = ref(false)
 const isMobile = ref(window.innerWidth <= 768)
+const nickname = ref('')
+const avatarUrl = ref('')
 
 // 从 localStorage 获取头像链接
-const avatarUrl = ref(localStorage.getItem('avatar'))
 
 // 注入主题相关函数
 const { isDarkMode, toggleTheme } = inject('theme') as {
@@ -220,10 +219,9 @@ const handleToRefresh = () => {
   window.location.reload()
 }
 
-const appWindow = getCurrentWindow()
 
 const handleToClose = async () => {
-  await invoke('close_window');
+  await invoke('quit_window');
 }
 
 const handleToMinimize = async () => {
@@ -236,6 +234,10 @@ const handleToMaximize = async () => {
 
 const handleToCloseToPanel = async () => {
   ToClose.value = false
+  new Notification('FRP客户端', {
+    body: 'FRP客户端已最小化到托盘',
+    silent: true,
+  })
   await invoke('hide_to_tray');
 }
 const handleResize = () => {

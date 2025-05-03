@@ -59,7 +59,6 @@ const baseMenuOptions: MenuOption[] = [
   },
 ]
 export function getMenuOptions(): MenuOption[] {
-  const userGroup = localStorage.getItem('group')
   const options = [...baseMenuOptions]
   return options
 }

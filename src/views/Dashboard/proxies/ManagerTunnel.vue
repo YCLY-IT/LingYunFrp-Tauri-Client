@@ -164,7 +164,7 @@
             <NTag :type="selectedProxy.isOnline ? 'success' : 'error'" size="small">
               {{ selectedProxy.isOnline ? '在线' : '离线' }}
             </NTag>
-            <NTag v-if="selectedProxy.isBanned" type="error" size="small" style="margin-left: 8px">
+            <NTag v-if="selectedProxy.is_banned" type="error" size="small" style="margin-left: 8px">
               已封禁
             </NTag>
           </div>
@@ -435,7 +435,7 @@ import {
   NEmpty, NCode, NCollapse, NCollapseItem, NAlert, NDynamicTags, NSpin,
   NTabs, NTabPane, NScrollbar
 } from 'naive-ui'
-import { GridOutline, ListOutline, BuildOutline, RefreshOutline, SearchOutline, InformationCircleOutline, CreateOutline, TrashOutline, PowerOutline, AddOutline, CopyOutline, DocumentOutline, EllipsisHorizontalCircleOutline, DownloadOutline } from '@vicons/ionicons5'
+import { GridOutline, ListOutline, BuildOutline, RefreshOutline, SearchOutline, InformationCircleOutline, CreateOutline, TrashOutline, PowerOutline, AddOutline, CopyOutline, DocumentOutline, EllipsisHorizontalCircleOutline } from '@vicons/ionicons5'
 import hljs from 'highlight.js/lib/core'
 import javascript from 'highlight.js/lib/languages/javascript'
 import ini from 'highlight.js/lib/languages/ini'
@@ -446,7 +446,7 @@ import type { Proxy} from '../../../types'
 import { switchButtonRailStyle } from '../../../constants/theme'
 import { useRouter } from 'vue-router'
 import {userApi} from "../../../net";
-import {accessHandle} from "../../../net/base.ts";
+import { accessHandle } from "../../../net/base.ts";
 import { invoke } from '@tauri-apps/api/core'
 
 const isIPAddress = (hostname: string) => {
@@ -514,17 +514,6 @@ const runArgs = ref('')
 const token = ref('')
 const domainTags = ref<string[]>([])
 
-const formatTime = (timestamp: number) => {
-  return new Date(timestamp * 1000).toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
-  })
-}
 
 const rules: FormRules = {
   proxyName: {
@@ -596,8 +585,8 @@ const handleRefresh = async () => {
       } else {
         message.error(data.message || '获取隧道列表失败')
       }
-    }, (error) => {
-      message.error(error.message || '获取隧道列表失败')
+    }, (messageText) => {
+      message.error(messageText || '获取隧道列表失败')
     }, (error) => {
       message.error(error.message || '获取隧道列表失败')
       loading.value = false
@@ -649,19 +638,19 @@ const proxyToOperate = ref<Proxy | null>(null)
 
 const toggleModalTitle = computed(() => {
   if (!proxyToOperate.value) return ''
-  return proxyToOperate.value.is_disabled ? '启用确认' : '禁用确认'
+  return proxyToOperate.value.isDisabled ? '启用确认' : '禁用确认'
 })
 
 const toggleModalContent = computed(() => {
   if (!proxyToOperate.value) return ''
-  return proxyToOperate.value.is_disabled ? '确认要启用此隧道吗？' : '确认要禁用此隧道吗？'
+  return proxyToOperate.value.isDisabled ? '确认要启用此隧道吗？' : '确认要禁用此隧道吗？'
 })
 
 const handleToken = async () => {
   try {
     userApi.get("/user/info/token", accessHandle(), (data) => {
       if (data.code === 0) {
-        token.value = data.data.token
+        token.value = data.data.token.token
       } else {
         message.error(data.message || '获取Token失败')
       }
@@ -677,7 +666,7 @@ handleToken()
 const handleGenConfig = async (proxy: Proxy) => {
   selectedProxy.value = proxy
   showConfigModal.value = true
-  runArgs.value = `./lyfrpc -t ${token.value.token} -p ${proxy.proxyId}`
+  runArgs.value = `./lyfrpc -t ${token.value} -p ${proxy.proxyId}`
 
   try {
     loading.value = true
@@ -703,8 +692,8 @@ const handleGenConfig = async (proxy: Proxy) => {
       } else {
         message.error(data.message || '获取配置失败')
       }
-    }, (error) => {
-      message.error(error.message || '获取配置失败')
+    }, (messageText) => {
+      message.error(messageText || '获取配置失败')
     }, () => {
       loading.value = false
 })
@@ -1172,13 +1161,11 @@ const handleStarProxy = async (proxy: Proxy) => {
     if (!proxy.isOnline) {
       const success = await invoke('start_proxy', {
         proxyId: proxy.proxyId,
-        token: token.value.token
+        token: token.value
       });
       
       if (success) {
-        proxy.isOnline = true;
-        message.success('隧道启动成功');
-        // 更新隧道状态
+        message.info('正在尝试启动隧道');
       }
     } else {
       const success = await invoke('stop_proxy', { 

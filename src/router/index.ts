@@ -123,7 +123,7 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
   //需要登录的路由校验
   if (to.matched.some(record => record.meta.requiresAuth)) {
     if (unauthorized()) {
@@ -146,7 +146,7 @@ router.beforeEach((to, from, next) => {
     next()
   }
 })
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
   // 设置文档标题
   document.title = to.meta.title ?
       `${to.meta.title} - 凌云FRP` : // 自定义标题格式

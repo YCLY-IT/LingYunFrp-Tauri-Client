@@ -66,7 +66,7 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { NForm, NFormItem, NInput, NButton, NCard, NIcon, NInputGroup, type FormRules, useMessage, type FormInst } from 'naive-ui'
 import {PersonAddOutline} from '@vicons/ionicons5'
-import {userApi} from "@/net";
+import {userApi} from "../net";
 
 const router = useRouter()
 const message = useMessage()
@@ -152,8 +152,8 @@ const handleSendEmailCode = async () => {
         formValue.value.emailCode = ''
         isEmailCodeSending.value = false // 确保发送成功后将状态设置为false
       },
-      (error) => {
-        message.error(error.message)
+      (messageText) => {
+        message.error(messageText)
         isEmailCodeSending.value = false // 发送失败后也需要将状态设置为false
       },
   )
@@ -164,7 +164,6 @@ const handleSubmit = async () => {
   await formRef.value?.validate()
   isSubmitting.value = true
   userApi.forget(
-      formValue.value.username,
       formValue.value.password,
       formValue.value.email,
       formValue.value.emailCode,
@@ -174,8 +173,8 @@ const handleSubmit = async () => {
           router.push('/login');
         }, 1200);
       },
-      (message) => {
-        message.error(message);
+      (messageText) => {
+        message.error(messageText);
       }
   )
 }

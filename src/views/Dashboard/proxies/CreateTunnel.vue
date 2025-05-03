@@ -312,8 +312,8 @@ const fetchUserGroups = async () => {
       } else {
           message.error(data.message || '获取用户组列表失败')
       }
-  }, (error) => {
-      message.error(error?.response?.data?.message || '获取用户组列表失败')
+  }, (messageText) => {
+      message.error(messageText || '获取用户组列表失败')
   })
 }
 
@@ -350,8 +350,8 @@ const fetchNodes = async () => {
       } else {
         message.error(data.message || '获取节点列表失败')
       }
-    }, (error) => {
-        message.error(error.message || '获取节点列表失败')
+    }, (messageText) => {
+        message.error(messageText || '获取节点列表失败')
     })
 }
 const selectedNode = ref<{

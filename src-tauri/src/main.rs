@@ -8,11 +8,20 @@ use tauri::Emitter;
 use tauri::command;
 use std::collections::HashMap;
 use std::sync::Mutex;
+use tauri_plugin_notification::NotificationExt;
 
 #[tauri::command]
 fn close_window(window: tauri::Window) {
+    window.hide().unwrap();
+}
+
+#[tauri::command]
+fn quit_window(window: tauri::Window, app: tauri::AppHandle) {
+    // 设置退出标志
+    *app.state::<Mutex<bool>>().lock().unwrap() = true;
     kill_all_processes().unwrap();
     window.close().unwrap();
+    std::process::exit(0);
 }
 
 #[tauri::command]
@@ -38,6 +47,7 @@ fn hide_to_tray(window: tauri::Window) {
 fn main() {
     tauri::Builder::default()
     .manage(Mutex::new(HashMap::<u32, std::process::Child>::new()))
+    .manage(Mutex::new(false)) // 添加退出状态标志
     .plugin(tauri_plugin_notification::init())
     .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
@@ -56,7 +66,8 @@ fn main() {
             kill_all_processes,
             get_cpl_version,
             start_proxy,
-            stop_proxy
+            stop_proxy,
+            quit_window
         ])
         .setup(|app| {
             // 确保应用数据目录存在
@@ -68,13 +79,32 @@ fn main() {
             create_tray_menu(app)?;
             let window = app.get_webview_window("main").unwrap();
             window.set_decorations(false).unwrap();
-            // 添加拖动区域
-            window.on_window_event(|event| {
-                if let tauri::WindowEvent::Moved { .. } = event {
-                    // 处理拖动事件
-
+            
+            // 修改后的窗口事件处理
+            let window_clone = window.clone();
+            window.on_window_event(move |event| {
+                match event {
+                    tauri::WindowEvent::CloseRequested { api, .. } => {
+                        api.prevent_close();
+                        let _ = window_clone.hide();
+                        
+                        // 检查是否是退出操作
+                        let is_quitting = *window_clone.app_handle().state::<Mutex<bool>>().lock().unwrap();
+                        if !is_quitting && !window_clone.is_visible().unwrap_or(true) {
+                            let _ = window_clone.app_handle().notification()
+                                .builder()
+                                .title("FRP客户端")
+                                .body("FRP客户端已最小化到托盘")
+                                .show();
+                        }
+                    }
+                    tauri::WindowEvent::Moved { .. } => {
+                        // 处理拖动事件
+                    }
+                    _ => {}
                 }
             });
+            
             #[cfg(target_os = "windows")]
             window.set_ignore_cursor_events(false).unwrap();
 
@@ -113,6 +143,8 @@ fn create_tray_menu(app: &tauri::App) -> Result<TrayIcon, Box<dyn std::error::Er
                 }
             }
             "quit" => {
+                // 设置退出标志
+                *app.state::<Mutex<bool>>().lock().unwrap() = true;
                 kill_all_processes().unwrap();
                 app.exit(0);
             }
@@ -128,7 +160,7 @@ fn check_frpc_exists(app: tauri::AppHandle) -> bool {
     // 1. 检查应用数据目录
     let app_data_dir = app.path().app_data_dir().unwrap();
     let frpc_path = app_data_dir.join("frpc.exe");
-    println!("检查路径1: {:?}", frpc_path);
+    //println!("检查路径1: {:?}", frpc_path);
     
     if frpc_path.exists() {
         return true;
@@ -137,7 +169,7 @@ fn check_frpc_exists(app: tauri::AppHandle) -> bool {
     // 2. 检查程序所在目录
     if let Ok(exe_dir) = std::env::current_exe() {
         let exe_path = exe_dir.parent().unwrap().join("frpc.exe");
-        println!("检查路径2: {:?}", exe_path);
+        //println!("检查路径2: {:?}", exe_path);
         if exe_path.exists() {
             return true;
         }

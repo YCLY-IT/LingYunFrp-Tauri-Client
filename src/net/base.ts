@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Window } from '@/types'
+import { Window } from '../types'
 
 const api = axios.create({
     baseURL: 'http://localhost:8081/',
@@ -9,7 +9,7 @@ const api = axios.create({
     }
 });
 
-const defaultFailure = (messageText: string, code: number, url: string) => {
+const defaultFailure = (messageText: string) => {
     //! TODO: only console warning, don't show message here
     window.$message?.warning(`${messageText}`);
 };
@@ -22,7 +22,7 @@ const defaultError = (err: Error) => {
 };
 
 //! TODO: Specifies the params and return value type
-function storeToken(Authorization, remember, expires) {
+function storeToken(Authorization: any, remember: boolean, expires: any) {
     const token = {
         Authorization: Authorization,
         remember: remember,
@@ -61,12 +61,7 @@ function removeToken() {
 declare const window: Window
 
 function accessHandle() {
-    //! TODO: what the type of token? string or Object
-    const token = getToken();
-    return token ? {
-        //! TODO:                only can be string
-        'Authorization': `${getToken()}`
-    } : {};
+
     
     // 在请求开始时显示加载条
     window.$loadingBar?.start()
@@ -85,7 +80,7 @@ function post(url: string, data: any, headers: Record<string, string | number>, 
         if (data.code === 0) {
             success(data);
         } else {
-            failure(data.message, data.code, data.url);
+            failure(data.message);
         }
     }).catch(err => error(err));
 }
@@ -99,7 +94,7 @@ function get(url: string, headers: Record<string, string>, success: Function, fa
             success(data);
             window.$loadingBar?.finish()
         } else {
-            failure(data.message, data.code, data.url);
+            failure(data.message);
             window.$loadingBar?.error()
         }
     }).catch(err => error(err));

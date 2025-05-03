@@ -57,7 +57,7 @@
                   accept="image/*"
                   list-type="image-card"
                   :max="1"
-                  @before-upload="handleBeforeUpload"
+                  @on-before-upload="handleBeforeUpload"
               />
             </NFormItem>
             <div class="form-actions">

@@ -105,7 +105,7 @@ const userInfo = ref({
   friendlyGroup: '',
   usedProxies: 0,
   maxProxies: 0,
-  regTime: 0,
+  regTime: '',
   traffic: 0,
   outlimit: 0,
   inlimit: 0,

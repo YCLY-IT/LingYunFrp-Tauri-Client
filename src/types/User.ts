@@ -22,9 +22,6 @@ export interface FilterUsersArgs {
     status?: number;
     keyword?: string;
 }
-export interface UpdateNodeArgs extends AddNodeArgs {
-    nodeId: number;
-}
 
 export interface GetNodesArgs {
     page: number;

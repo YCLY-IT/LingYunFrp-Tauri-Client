@@ -16,7 +16,7 @@ export function login(username: string, password: string, remember: boolean, suc
     },{}, (data: any) => {
         storeToken(data.data.Authorization, remember, data.expires);
         success(data);
-    }, (message, code, url) => {
-        failure(message, code, url);
+    }, (messageText) => {
+        failure(messageText);
     });
 }

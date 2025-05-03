@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, nextTick, computed } from 'vue'
+import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { listen } from '@tauri-apps/api/event'
 import { useMessage, NButton, NCard, NLog, NSpace, NSwitch, NSelect } from 'naive-ui'
 import type { LogInst, SelectOption } from 'naive-ui'
@@ -46,7 +46,6 @@ const tunnelOptions = ref<SelectOption[]>([
   { label: '全部日志', value: 'all' }
 ])
 const selectedTunnel = ref('all')
-const MAX_LOGS_PER_TUNNEL = 500; // 每个隧道最大日志条数
 const MAX_LOG_COUNT = 10000; // 全局最大日志条数，增加以保存更多日志
 
 // 添加全局标记，避免重复初始化日志
@@ -212,8 +211,8 @@ function updateDisplayedLogs() {
   
   // 获取对应的日志内容并合并
   const logEntries = hashes
-    .map(hash => logStore.value.get(hash))
-    .filter(Boolean)
+  .map(hash => logStore.value.get(hash.toString()))
+  .filter((log): log is string => log !== undefined)
     .sort((a, b) => {
       // 按时间戳排序
       const timeA = a.match(/\[(\d{1,2}:\d{1,2}:\d{1,2})\]/)?.[1] || '';

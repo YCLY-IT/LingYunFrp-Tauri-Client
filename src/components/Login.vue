@@ -1,5 +1,5 @@
 <template>
-  <div class="login" data-tauri-drag-region>
+  <div class="login">
     <NCard class="auth-card">
       <div class="auth-header">
         <div class="title-with-icon">
@@ -37,7 +37,9 @@
 .login {
   background-image: url('https://dailybing.com/api/v1');
   height: 100vh;
+  overflow: hidden;
   display: flex;
+  position: relative;
   -webkit-app-region: drag; /* 添加这一行启用拖动 */
 }
 
@@ -48,15 +50,12 @@
 </style>
 
 
-
-
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { NForm, NFormItem, NInput, NButton, NCard, NIcon, type FormRules, useMessage, type FormInst } from 'naive-ui'
 import { LogInOutline } from '@vicons/ionicons5'
 import { userApi } from '../net'
-import TopMenu from './TopMenu.vue'
 
 const router = useRouter()
 const message = useMessage()
@@ -93,7 +92,7 @@ if (!formValue.value.username) {
       formValue.value.username,
       formValue.value.password,
       formValue.value.remember,
-      (data) => {
+      (data: any) => {
         localStorage.setItem('username', data.data.username)
         localStorage.setItem('nickname', data.data.nickname)
         localStorage.setItem('avatar', data.data.avatar)
@@ -102,7 +101,7 @@ if (!formValue.value.username) {
           router.push('/dashboard');
         }, 1200)
       },
-      (data)=> {
+      (data: any)=> {
         message.error(data)
       },
   )
@@ -111,25 +110,4 @@ if (!formValue.value.username) {
 
 <style lang="scss" scoped>
 @use '../assets/styles/login.scss';
-.checkbox-forgot {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px; // 根据需要调整间距
-}
-.login {
-  background-image: url('https://dailybing.com/api/v1');
-  height: 100vh;
-  display: flex;
-}
-.auth-card {
-  background-color: transparent;
-  backdrop-filter: blur(8px);
-  border-radius: 16px;
-}
-.title-with-icon {
-  display: flex;
-  align-items: center;
-  gap: 0px;; // 调整这个值来改变间距
-}
 </style>

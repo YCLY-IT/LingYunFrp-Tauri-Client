@@ -1,10 +1,5 @@
 import {defaultFailure, post} from "../../net/base.js";
 
-export interface RegisterData
-{
-    
-}
-
 export function register(username: string, nickname: string, password: string, email: string, code: string,  success: (arg0: any) => void, failure = defaultFailure) {
     post('/user/register', {
         username,
@@ -18,12 +13,12 @@ export function register(username: string, nickname: string, password: string, e
         if (data.code === 0) {
             success(data);
         }else {
-            failure(data.message, data.code, data.url);
+            failure(data.message);
         }
 
-    }, (message, code, url) => {
-        failure(message, code, url);
-    }, (err) => {
-        failure(err);
+    }, (message) => {
+        failure(message);
+    }, (err : Error) => {
+        failure(err.message);
     });
 }
