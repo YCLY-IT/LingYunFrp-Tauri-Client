@@ -26,7 +26,8 @@
         </NButton>
         <div class="form-footer register-link">
           <span>还没有账号？</span>
-          <router-link to="/register">立即注册</router-link>
+          <!-- <router-link to="/register">立即注册</router-link> -->
+          <a href="#" @click.prevent="OpenBrowser('https://lyfrp.cn/login')">立即注册</a>
         </div>
       </NForm>
     </NCard>
@@ -56,6 +57,7 @@ import { useRouter } from 'vue-router'
 import { NForm, NFormItem, NInput, NButton, NCard, NIcon, type FormRules, useMessage, type FormInst } from 'naive-ui'
 import { LogInOutline } from '@vicons/ionicons5'
 import { userApi } from '../net'
+import { OpenBrowser } from '../net/base'
 
 const router = useRouter()
 const message = useMessage()
@@ -69,7 +71,7 @@ const formValue = ref({
 const rules: FormRules = {
   username: {
     required: true,
-    message: '请输入用户名',
+    message: '请输入用户名/邮箱',
     trigger: 'blur'
   },
   password: {
@@ -81,7 +83,7 @@ const rules: FormRules = {
 
 const handleSubmit = async () => {
 if (!formValue.value.username) {
-    message.error('请输入用户名')
+    message.error('请输入用户名/邮箱')
     return
   }
   if (!formValue.value.password) {
@@ -106,6 +108,7 @@ if (!formValue.value.username) {
       },
   )
 }
+
 </script>
 
 <style lang="scss" scoped>

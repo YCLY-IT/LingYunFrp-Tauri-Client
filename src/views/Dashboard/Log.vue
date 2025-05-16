@@ -406,11 +406,17 @@ onMounted(async () => {
   console.log('初始加载日志完成，共有日志条数:', logStore.value.size);
   
   try {
+    // 监听隧道事件
+    // const tunnelEventUnlisten = await listen('tunnel-event', async (event: any) => {
+    //   const { type, tunnelId, message } = event.payload;
+    //   appendSystemLog(`[隧道 ${tunnelId}] ${message}`);
+    // });
+    
     // 监听全局日志
     const globalLogUnlisten = await listen('log', (event: any) => {
-      console.log("收到全局日志:", event.payload.message);
-      appendLog(event.payload.message);
+      appendLog(event.payload.message); // 自动保存到 localStorage
     });
+
     cleanupFunctions.value.push(globalLogUnlisten);
     console.log("已设置全局日志监听器");
 

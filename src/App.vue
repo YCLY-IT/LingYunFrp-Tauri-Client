@@ -29,9 +29,13 @@ import AppContent from './components/AppContent.vue'
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 
+
+// 从localStorage读取主题状态，默认跟随系统
+const isDarkMode = ref(localStorage.getItem('theme') === 'dark' || 
+  window.matchMedia('(prefers-color-scheme: dark)').matches)
+
 // 主题状态
 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)')
-const isDarkMode = ref(prefersDark.matches)
 const theme = computed(() => isDarkMode.value ? darkTheme : null)
 
 
@@ -44,6 +48,7 @@ const cleanupFunctions = ref<(() => void)[]>([]);
 // 主题切换函数
 const toggleTheme = () => {
   isDarkMode.value = !isDarkMode.value
+  localStorage.setItem('theme', isDarkMode.value ? 'dark' : 'light')
 }
 
 // 提供给全局使用
@@ -78,6 +83,12 @@ if (!Debug){
 }
 
 onMounted(async () => {
+  const theme = localStorage.getItem('theme')
+  if (theme === 'dark') {
+    isDarkMode.value = true
+  } else if (theme === 'light') {
+    isDarkMode.value = false
+  }
   try {
     const updateInfo = await invoke<{
       code: number;
@@ -171,5 +182,11 @@ input, textarea, select {
   input, textarea, select {
     font-size: 16px !important;
   }
+}
+</style>
+
+<style>
+.n-card {
+  border-radius: 10px; /* 设置全局圆角大小 */
 }
 </style>

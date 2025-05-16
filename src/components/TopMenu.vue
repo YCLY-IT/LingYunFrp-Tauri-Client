@@ -18,7 +18,7 @@
             </NScrollbar>
           </div>
         </NPopover>
-        <h2 class="logo" style="margin-left: 20px;">LingYunFRP</h2>
+        <h2 style="margin-left: 20px; background: transparent; -webkit-background-clip: text; color: transparent; background-image: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);">LingYunFRP</h2>
       </div>
       <div class="right" style="transform: translateX(-35px); text-align: center;">
         <div class="the-right" style="margin-right: 15px;">
@@ -169,6 +169,7 @@ const options = [
 // 处理主题切换
 const handleThemeChange = () => {
   toggleTheme()
+  localStorage.setItem('theme', isDarkMode.value ? 'dark' : 'light')
 }
 
 function userLogout() {

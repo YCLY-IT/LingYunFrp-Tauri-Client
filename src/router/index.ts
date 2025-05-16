@@ -22,22 +22,6 @@ const router = createRouter({
       }
     },
     {
-      path: '/register',
-      name: 'register',
-      component: () => import('../components/Register.vue'),
-      meta: {
-        title: '注册',
-      }
-    },
-   {
-          path: '/forget',
-          name: 'ResetPassword',
-          component: () => import('../components/ResetPassword.vue'),
-          meta: {
-              title: '重置密码',
-          }
-    },
-    {
       path: '/dashboard',
       name: 'dashboard',
       component: () => import('../views/Dashboard.vue'),
@@ -136,7 +120,7 @@ router.beforeEach((to, _from, next) => {
     }
   }
   // 已登录用户禁止访问登录/注册页
-  else if ((to.name === 'login' || to.name === 'register' || to.name === 'ResetPassword') && !unauthorized()) {
+  else if ((to.name === 'login') && !unauthorized()) {
     next({ name: 'dashboard' })
   }
   // 其他情况直接放行

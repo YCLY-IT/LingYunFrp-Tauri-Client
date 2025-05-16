@@ -9,6 +9,7 @@ use tauri::command;
 use std::collections::HashMap;
 use std::sync::Mutex;
 use tauri_plugin_notification::NotificationExt;
+use std::io::BufRead;
 
 #[tauri::command]
 fn close_window(window: tauri::Window) {
@@ -67,7 +68,8 @@ fn main() {
             get_cpl_version,
             start_proxy,
             stop_proxy,
-            quit_window
+            quit_window,
+            open_url
         ])
         .setup(|app| {
             // 确保应用数据目录存在
@@ -244,8 +246,39 @@ async fn download_frpc(app: tauri::AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
-async fn toggle_auto_start(_enable: bool) -> Result<(), String> {
-    // TODO: 实现开机自启动设置
+async fn toggle_auto_start(enable: bool) -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        use winreg::{RegKey, enums::HKEY_CURRENT_USER, enums::KEY_WRITE};
+        
+        let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+        let path = r"Software\Microsoft\Windows\CurrentVersion\Run";
+        
+        match hkcu.open_subkey_with_flags(path, KEY_WRITE) {
+            Ok(key) => {
+                let app_name = "LingYunFrp";
+                let exe_path = std::env::current_exe()
+                    .map_err(|e| format!("获取当前程序路径失败: {}", e))?
+                    .to_string_lossy()
+                    .into_owned();
+                
+                if enable {
+                    key.set_value(app_name, &exe_path)
+                        .map_err(|e| format!("设置自启动失败: {}", e))?;
+                } else {
+                    key.delete_value(app_name)
+                        .map_err(|e| format!("取消自启动失败: {}", e))?;
+                }
+            }
+            Err(e) => return Err(format!("打开注册表失败: {}", e)),
+        }
+    }
+    
+    #[cfg(not(target_os = "windows"))]
+    {
+        return Err("当前仅支持Windows系统的开机自启动".to_string());
+    }
+    
     Ok(())
 }
 
@@ -281,13 +314,71 @@ async fn start_proxy(
     let mut command = std::process::Command::new(&frpc_path);
     
     command
-        .arg("-t")
-        .arg(token)
-        .arg("-p")
-        .arg(proxy_id.to_string());
+        .arg("-t").arg(token)
+        .arg("-p").arg(proxy_id.to_string())
+        .stdout(std::process::Stdio::piped())  // 新增：捕获标准输出
+        .stderr(std::process::Stdio::piped());  // 新增：捕获错误输出
 
-    let child = command.spawn().map_err(|e| format!("启动隧道失败: {}", e))?;
-    
+    let mut child = command.spawn().map_err(|e| format!("启动隧道失败: {}", e))?;
+
+    // 新增：创建线程读取输出
+    let app_handle = app.clone();
+    let stdout = child.stdout.take().unwrap();
+    let stderr = child.stderr.take().unwrap();
+
+    // 处理标准输出
+    std::thread::spawn(move || {
+        let reader = std::io::BufReader::new(stdout);
+        for line in reader.lines() {
+            if let Ok(line) = line {
+                let _ = app_handle.emit(
+                    "tunnel-event",
+                    serde_json::json!({
+                        "type": "log",
+                        "tunnelId": proxy_id,
+                        "message": line
+                    }),
+                );
+            }
+        }
+    });
+
+    // 处理错误输出
+    let app_handle_err = app.clone(); // 新增克隆
+    std::thread::spawn(move || {
+        let reader = std::io::BufReader::new(stderr);
+        for line in reader.lines() {
+            if let Ok(line) = line {
+                let _ = app_handle_err.emit( // 使用克隆后的handle
+                    "tunnel-event", 
+                    serde_json::json!({
+                        "type": "error",
+                        "tunnelId": proxy_id,
+                        "message": line
+                    }),
+                );
+            }
+        }
+    });
+
+    // 发送启动日志事件
+    let _ = app.emit(
+        "tunnel-event",
+        serde_json::json!({
+            "type": "start",
+            "tunnelId": proxy_id,
+            "message": format!("隧道 #{} 启动进程", proxy_id)
+        }),
+    );
+
+    // 发送到前端日志系统
+    let _ = app.emit(
+        "log",
+        serde_json::json!({
+            "message": format!("[FRPC] 启动进程 PID: {}", child.id())
+        }),
+    );
+
     // 保存进程ID以便后续管理
     app.state::<Mutex<HashMap<u32, std::process::Child>>>()
         .lock()
@@ -348,4 +439,12 @@ fn get_frpc_cli_version(app: tauri::AppHandle) -> Result<String, String> {
         "version": version,
         "path": frpc_path_clone.to_string_lossy().replace('\\', "\\\\")
     }).to_string())
+}
+
+#[tauri::command]
+fn open_url(url: String) {
+    // 使用系统默认浏览器打开URL
+    if let Err(e) = open::that(&url) {
+        eprintln!("打开浏览器失败: {}", e);
+    }
 }

@@ -1164,6 +1164,7 @@ const handleStarProxy = async (proxy: Proxy) => {
         token: token.value
       });
       
+      // 在隧道启动成功的回调处添加日志记录
       if (success) {
         message.info('正在尝试启动隧道');
       }

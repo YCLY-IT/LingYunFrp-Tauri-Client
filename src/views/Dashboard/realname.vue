@@ -197,5 +197,4 @@ const handleSubmit = async () => {
 </script>
 
 <style lang="scss" scoped>
-@use '../../assets/styles/register.scss';
 </style>

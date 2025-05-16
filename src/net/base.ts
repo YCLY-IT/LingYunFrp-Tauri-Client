@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { Window } from '../types'
+import { invoke } from '@tauri-apps/api/core';
 
 const api = axios.create({
     baseURL: 'http://localhost:8081/',
@@ -104,4 +105,16 @@ function unauthorized() {
     return !getToken();
 }
 
-export { api, defaultFailure, defaultError, storeToken, getToken, accessHandle, removeToken, post, get, unauthorized }
+
+function OpenBrowser(url: string) {
+    // 外部浏览器打开
+    invoke('open_url', { url: url })
+        .then(() => {
+            console.log('打开浏览器成功');
+        })
+        .catch((err) => {
+            console.error('打开浏览器失败:', err);
+        });
+}
+
+export { api, defaultFailure, defaultError, storeToken, getToken, accessHandle, removeToken, post, get, unauthorized, OpenBrowser }
