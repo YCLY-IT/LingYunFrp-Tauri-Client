@@ -19,14 +19,15 @@
                   show-password-on="click" />
         </NFormItem>
         <div class="checkbox-forgot">
-          <router-link to="/forget" class="forgot-link" style="color: #1976D2">忘记密码？</router-link>
+          <!-- <router-link to="/forget" class="forgot-link" style="color: #1976D2">忘记密码？</router-link> -->
+           <a href="#" class="forgot-link" @click.prevent="OpenBrowser('https://lyfrp.cn/forget')">忘记密码？</a>
+           <p></p>
         </div>
-        <NButton type="primary" block secondary strong @click="handleSubmit">
+        <NButton :loading="loading" type="primary" block secondary strong @click="handleSubmit">
           登录
         </NButton>
         <div class="form-footer register-link">
           <span>还没有账号？</span>
-          <!-- <router-link to="/register">立即注册</router-link> -->
           <a href="#" @click.prevent="OpenBrowser('https://lyfrp.cn/login')">立即注册</a>
         </div>
       </NForm>
@@ -61,6 +62,7 @@ import { OpenBrowser } from '../net/base'
 
 const router = useRouter()
 const message = useMessage()
+const loading = ref(false)
 const formRef = ref<FormInst | null>(null)
 const formValue = ref({
   username: '',
@@ -90,6 +92,8 @@ if (!formValue.value.username) {
     message.error('请输入密码')
     return
   }
+  loading.value = true;
+  try{
   userApi.login(
       formValue.value.username,
       formValue.value.password,
@@ -98,6 +102,7 @@ if (!formValue.value.username) {
         localStorage.setItem('username', data.data.username)
         localStorage.setItem('nickname', data.data.nickname)
         localStorage.setItem('avatar', data.data.avatar)
+        localStorage.setItem('email', data.data.email)
         message.success(data.message)
         setTimeout(() => {
           router.push('/dashboard');
@@ -107,6 +112,11 @@ if (!formValue.value.username) {
         message.error(data)
       },
   )
+  } catch (error) {
+    message.error(error) 
+  } finally {
+    loading.value = false;
+  }
 }
 
 </script>

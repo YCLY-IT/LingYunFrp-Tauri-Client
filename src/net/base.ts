@@ -13,13 +13,15 @@ const api = axios.create({
 const defaultFailure = (messageText: string) => {
     //! TODO: only console warning, don't show message here
     window.$message?.warning(`${messageText}`);
+    window.$loadingBar?.error();
 };
 
 
-const defaultError = (err: Error) => {
+const defaultError = (err: any) => {
     //! TODO: only console error, don't show message here
     console.error(err);
-    window.$message?.error(`发生了一些小问题,要不试试刷新一下（＾ω＾）`);
+    window.$message?.error(err.response.data.message);
+    window.$loadingBar?.error();
 };
 
 //! TODO: Specifies the params and return value type
@@ -31,15 +33,15 @@ function storeToken(Authorization: any, remember: boolean, expires: any) {
     };
     const tokenStr = JSON.stringify(token);
     if (remember) {
-        localStorage.setItem('token', tokenStr);
+        localStorage.setItem('Authorization', tokenStr);
     } else {
-        sessionStorage.setItem('token', tokenStr);
+        sessionStorage.setItem('Authorization', tokenStr);
     }
 }
 
 //! TODO: Specifies the return value type
 function getToken() {
-    const tokenStr = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const tokenStr = localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization');
     if (tokenStr) {
         const token = JSON.parse(tokenStr);
         if (token.expires && token.expires < new Date().getTime()) {
@@ -54,8 +56,8 @@ function getToken() {
 }
 
 function removeToken() {
-    localStorage.removeItem('token');
-    sessionStorage.removeItem('token');
+    localStorage.removeItem('Authorization');
+    sessionStorage.removeItem('Authorization');
 }
 
 //! TODO: why the return value has two type(string or Object)?

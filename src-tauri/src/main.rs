@@ -180,7 +180,7 @@ fn check_frpc_exists(app: tauri::AppHandle) -> bool {
     false
 }
 const API_URL: &str = "http://localhost:8081/";
-const VERSION: &str = "0.0.1";
+const VERSION: &str = "1.0.0";
 
 #[tauri::command]
 async fn check_update(_app: tauri::AppHandle) -> Result<serde_json::Value, String> {

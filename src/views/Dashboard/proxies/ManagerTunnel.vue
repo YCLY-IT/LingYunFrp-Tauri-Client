@@ -193,7 +193,7 @@
               <span class="label">绑定域名：</span>
               <span class="value">
                 <NTag size="small" v-for="domain in JSON.parse(selectedProxy.domain || '[]')" :key="domain" type="info"
-                      style="cursor: pointer; margin-right: 8px" @click="() => openUrl(selectedProxy.proxyType, domain)">
+                      style="cursor: pointer; margin-right: 8px" @click="selectedProxy && openUrl(selectedProxy.proxyType, domain)">
                   {{ domain }}
                 </NTag>
               </span>
@@ -242,11 +242,11 @@
                     </td>
                     <td style="word-break: break-all; overflow-wrap: break-word;">{{ splitDomain(domain).host }}</td>
                     <td style="word-break: break-all; overflow-wrap: break-word;">
-                      {{isIPAddress(nodeOptions.find(n => n.value === selectedProxy.nodeId)?.hostname || '') ? 'A' :
+                      {{isIPAddress(nodeOptions.find(n => n.value === selectedProxy?.nodeId)?.hostname || '') ? 'A' :
                         'CNAME' }}
                     </td>
                     <td style="word-break: break-all; overflow-wrap: break-word;">
-                      <NText type="primary">{{nodeOptions.find(n => n.value === selectedProxy.nodeId)?.hostname}}
+                      <NText type="primary">{{nodeOptions.find(n => n.value === selectedProxy?.nodeId || '')?.hostname }}
                       </NText>
                     </td>
                   </tr>

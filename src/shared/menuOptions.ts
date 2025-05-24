@@ -1,5 +1,5 @@
 import { h, Component, ref } from 'vue'
-import { HomeOutline, AddCircleOutline, AppsOutline, IdCardOutline,  WalletOutline, SettingsOutline } from '@vicons/ionicons5'
+import { HomeOutline, AddCircleOutline, AppsOutline, IdCardOutline,  WalletOutline, SettingsOutline, ListOutline } from '@vicons/ionicons5'
 import { NIcon, type MenuOption } from 'naive-ui'
 import { SquareTerminal } from 'lucide-vue-next';
 
@@ -11,39 +11,29 @@ const baseMenuOptions: MenuOption[] = [
     link: '/dashboard/home',
   },
   {
-    label: '创建隧道',
-    icon: renderIcon(AddCircleOutline),
-    key: 'create-tunnel',
-    link: '/dashboard/proxy/create',
-  },
-  {
     label: '隧道管理',
     icon: renderIcon(AppsOutline),
-    key: 'proxy-list',
-    link: '/dashboard/proxy/list',
+    key: 'tunnel-section',
+    children: [
+        {
+          label: '创建隧道',
+          icon: renderIcon(AddCircleOutline),
+          key: 'create-tunnel',
+          link: '/dashboard/proxy/create',
+        },
+        {
+          label: '隧道列表',
+          icon: renderIcon(ListOutline),
+          key: 'proxy-list',
+          link: '/dashboard/proxy/list',
+        }
+    ]
   },
   {
     label: '用户中心',
     icon: renderIcon(IdCardOutline),
-    key: 'user-section',
-    children: [
-      {
-        label: '个人中心',
-        key: 'user-profile',
-        link: '/dashboard/user/profile',
-      },
-        {
-          label: '我的资料',
-          key: 'user-my-profile',
-          link: '/dashboard/user/my-profile',
-        },
-    ],
-  },
-  {
-    label: '增值服务',
-    key: 'cash',
-    icon: renderIcon(WalletOutline),
-    link: '/dashboard/cash',
+    key: 'user-profile',
+    link: '/dashboard/user/my-profile',
   },
   {
     label: '日志',

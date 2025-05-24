@@ -62,3 +62,9 @@ export interface DownloadSource {
     name: string
 }
 
+  export interface Traffic {
+    todayUsedTraffic: number
+    allUsedTraffic: number
+    allTraffic: number
+  }
+

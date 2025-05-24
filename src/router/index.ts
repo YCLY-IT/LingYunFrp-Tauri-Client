@@ -16,7 +16,7 @@ const router = createRouter({
     {
       path: '/login',
       name: 'login',
-      component: () => import('../components/Login.vue'),
+      component: () => import('../views/Login.vue'),
       meta: {
         title: '登录',
       }
@@ -55,27 +55,11 @@ const router = createRouter({
               }
           },
         {
-            path: 'user/profile',
-            name: 'user-profile',
-            component: () => import('../views/Dashboard/UserProfile.vue'),
-            meta: {
-                title: '用户信息',
-            }
-        },
-        {
           path: 'user/my-profile',
-          name: 'user-my-profile',
+          name: 'user-profile',
           component: () => import('../views/Dashboard/Profile.vue'),
           meta: {
-              title: '我的信息',
-          }
-        },
-        {
-          path: 'cash',
-          name: 'cash',
-          component: () => import('../views/Dashboard/Cash.vue'),
-          meta: {
-            title: '增值服务',
+              title: '用户信息',
           }
         },
         {
