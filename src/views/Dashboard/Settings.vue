@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import packageData from '../../../package.json'
 import { ref, onMounted } from 'vue'
 import {
   useMessage,
@@ -314,7 +315,7 @@ onMounted(async () => {
                     如果自动下载失败，您可以手动下载 Frpc 可执行文件并放置到程序数据目录
                 </n-alert>
                 <n-alert type="warning" title="注意">
-                    请在 LingYunFrp 管理面板 - 下载中心 下载对应操作系统和对应平台的 Frpc 可执行文件。 <br />
+                    请在 {{ packageData.title }} 管理面板 - 下载中心 下载对应操作系统和对应平台的 Frpc 可执行文件。 <br />
                     <br />
                     1. Windows 系统请下载 Windows 64 位版本的 Frpc 可执行文件 <br />
                     2. Mac 系统请下载 Mac 64 位版本的 Frpc 可执行文件 <br />

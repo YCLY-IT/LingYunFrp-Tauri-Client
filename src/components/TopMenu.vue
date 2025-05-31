@@ -18,7 +18,7 @@
             </NScrollbar>
           </div>
         </NPopover>
-        <h2 style="margin-left: 20px; background: transparent; -webkit-background-clip: text; color: transparent; background-image: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);">LingYunFRP</h2>
+        <h2 style="margin-left: 20px; background: transparent; -webkit-background-clip: text; color: transparent; background-image: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);">{{ packageData.title }}</h2>
       </div>
       <div class="right" style="transform: translateX(-35px); text-align: center;">
         <div class="the-right" style="margin-right: 15px;">
@@ -84,6 +84,7 @@
 </template>
 
 <script setup lang="ts">
+import packageData from '../../package.json'
 import { h, ref, inject, computed, Ref, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { NLayoutHeader, NIcon, NButton, NDropdown, useDialog, useMessage, NSwitch, NPopover, NMenu, MenuOption, NDrawer, NDrawerContent, NScrollbar, NModal } from 'naive-ui'

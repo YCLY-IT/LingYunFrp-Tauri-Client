@@ -114,13 +114,6 @@ router.beforeEach((to, _from, next) => {
     next()
   }
 })
-router.beforeEach((to, _from, next) => {
-  // 设置文档标题
-  document.title = to.meta.title ?
-      `${to.meta.title} - 凌云FRP` : // 自定义标题格式
-      '凌云FRP' // 默认标题
-  next()
-})
 
 // 添加路由导航守卫
 router.beforeEach(() => {

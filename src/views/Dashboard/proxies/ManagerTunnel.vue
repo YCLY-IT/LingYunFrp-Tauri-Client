@@ -346,83 +346,6 @@
         <NButton size="small" type="primary" :loading="loading" @click="handleToggleConfirm">确定</NButton>
       </template>
     </NModal>
-
-    <!-- 启动参数和配置文件 Modal -->
-    <NModal v-model:show="showConfigModal" preset="dialog" style="width: 800px; max-width: 90vw" class="config-dialog">
-      <template #header>
-        <div>生成启动配置</div>
-      </template>
-      <div style="margin: 16px 0" class="config-modal-container">
-        <NCollapse v-model:expanded-names="expandedNames" :on-update:expanded-names="handleUpdateExpanded">
-          <NCollapseItem title="启动参数" name="args" v-if="selectedProxy?.proxyType !== 'https'">
-            <NScrollbar style="max-height: 200px; overflow: auto">
-              <NCode :code="runArgs" language="yaml" :hljs="hljs" />
-            </NScrollbar>
-            <div style="margin-top: 8px;">Windows 用户如果启动失败，请尝试把 <NCode>lyfrpc</NCode> 换成 <NCode>.\lyfrpc.exe</NCode>。</div>
-          </NCollapseItem>
-          <NCollapseItem title="配置文件" name="config">
-            <NAlert type="error" style="margin-bottom: 16px" title="友情提示">
-              此处是为专业用户准备的配置文件, 请不要在没有判断能力的情况下随意修改, 否则隧道可能无法正常启动。<br>
-              请使用 "
-              <NCode>./lyfrpc -c </NCode>配置文件 " 进行启动。
-            </NAlert>
-            <NAlert type="warning" style="margin-bottom: 16px" title="HTTPS 隧道配置修改提示" v-if="selectedProxy?.proxyType == 'https'">
-              请修改相关 SSL 配置, 否则隧道无法正常启动。
-            </NAlert>
-
-            <NTabs
-                v-model:value="configFormat"
-                type="line"
-                placement="left"
-                style="margin-top: 20px"
-            >
-              <NTabPane name="toml" tab="Toml">
-                <NSpin :show="loading && configFormat === 'toml'">
-                  <NScrollbar style="max-height: 500px; overflow: auto">
-                    <NCode :code="tomlContent" language="toml" :hljs="hljs" />
-                  </NScrollbar>
-                </NSpin>
-              </NTabPane>
-
-              <NTabPane name="json" tab="Json">
-                <NSpin :show="loading && configFormat === 'json'">
-                  <NScrollbar style="max-height: 500px; overflow: auto">
-                    <NCode :code="jsonContent" language="json" :hljs="hljs" />
-                  </NScrollbar>
-                </NSpin>
-              </NTabPane>
-
-              <NTabPane name="yml" tab="Yaml">
-                <NSpin :show="loading && configFormat === 'yml'">
-                  <NScrollbar style="max-height: 500px; overflow: auto">
-                    <NCode :code="ymlContent" language="yaml" :hljs="hljs" />
-                  </NScrollbar>
-                </NSpin>
-              </NTabPane>
-
-              <NTabPane name="ini" tab="Ini">
-                <NSpin :show="loading && configFormat === 'ini'">
-                  <NScrollbar style="max-height: 500px; overflow: auto">
-                    <NCode :code="iniContent" language="ini" :hljs="hljs" />
-                  </NScrollbar>
-                </NSpin>
-              </NTabPane>
-            </NTabs>
-          </NCollapseItem>
-        </NCollapse>
-      </div>
-      <template #action>
-        <NButton size="small" @click="showConfigModal = false">关闭</NButton>
-        <NButton size="small" type="primary" @click="handleCopyConfig" :disabled="expandedNames.length === 0">
-          <template #icon>
-            <NIcon>
-              <CopyOutline />
-            </NIcon>
-          </template>
-          复制
-        </NButton>
-      </template>
-    </NModal>
   </div>
 </template>
 
@@ -432,16 +355,9 @@ import {
   NCard, NButton, NButtonGroup, NTag, NDataTable, NTable, NSpace, NIcon,
   NModal, NInput, NDropdown, NForm, NFormItem, NSelect, NInputNumber,
   useMessage, type FormInst, type FormRules, NDivider, NSwitch, NText,
-  NEmpty, NCode, NCollapse, NCollapseItem, NAlert, NDynamicTags, NSpin,
-  NTabs, NTabPane, NScrollbar
+  NEmpty, NAlert, NDynamicTags
 } from 'naive-ui'
 import { GridOutline, ListOutline, BuildOutline, RefreshOutline, SearchOutline, InformationCircleOutline, CreateOutline, TrashOutline, PowerOutline, AddOutline, CopyOutline, DocumentOutline, EllipsisHorizontalCircleOutline } from '@vicons/ionicons5'
-import hljs from 'highlight.js/lib/core'
-import javascript from 'highlight.js/lib/languages/javascript'
-import ini from 'highlight.js/lib/languages/ini'
-import toml from 'highlight.js/lib/languages/ini'
-import json from 'highlight.js/lib/languages/json'
-import yaml from 'highlight.js/lib/languages/yaml'
 import type { Proxy} from '../../../types'
 import { switchButtonRailStyle } from '../../../constants/theme'
 import { useRouter } from 'vue-router'
@@ -467,12 +383,6 @@ const splitDomain = (domain: string) => {
     rootDomain: parts.slice(1).join('.')
   }
 }
-
-hljs.registerLanguage('javascript', javascript)
-hljs.registerLanguage('ini', ini)
-hljs.registerLanguage('toml', toml)
-hljs.registerLanguage('json', json)
-hljs.registerLanguage('yaml', yaml)
 
 const message = useMessage()
 const loading = ref(false)
@@ -504,13 +414,6 @@ const editForm = ref({
 })
 const router = useRouter()
 const gettingFreePort = ref(false)
-const showConfigModal = ref(false)
-const configFormat = ref<'toml' | 'ini' | 'json' | 'yml'>('toml')
-const tomlContent = ref('')
-const iniContent = ref('')
-const jsonContent = ref('')
-const ymlContent = ref('')
-const runArgs = ref('')
 const token = ref('')
 const domainTags = ref<string[]>([])
 
@@ -663,57 +566,11 @@ const handleToken = async () => {
 }
 handleToken()
 
-const handleGenConfig = async (proxy: Proxy) => {
-  selectedProxy.value = proxy
-  showConfigModal.value = true
-  runArgs.value = `./lyfrpc -t ${token.value} -p ${proxy.proxyId}`
-
-  try {
-    loading.value = true
-    userApi.post("/proxy/config", {
-      proxyId: proxy.proxyId,
-      type: configFormat.value
-    }, accessHandle(), (data) => {
-      if (data.code === 0) {
-        switch (configFormat.value) {
-          case 'toml':
-            tomlContent.value = data.data.config
-            break
-          case 'ini':
-            iniContent.value = data.data.config
-            break
-          case 'json':
-            jsonContent.value = data.data.config
-            break
-          case 'yml':
-            ymlContent.value = data.data.config
-            break
-        }
-      } else {
-        message.error(data.message || '获取配置失败')
-      }
-    }, (messageText) => {
-      message.error(messageText || '获取配置失败')
-    }, () => {
-      loading.value = false
-})
-  } catch (error: any) {
-    message.error(error?.response?.data?.message || '获取配置失败')
-  } finally {
-    loading.value = false
-  }
-}
-
 const dropdownOptions = (proxy: Proxy) => [
   {
     label: '查看详情',
     key: 'view',
     icon: renderIcon(InformationCircleOutline)
-  },
-  {
-    label: '生成启动配置',
-    key: 'genConfig',
-    icon: renderIcon(DocumentOutline)
   },
   {
     type: 'divider',
@@ -875,9 +732,6 @@ const handleSelect = (key: string, proxy: Proxy) => {
       selectedProxy.value = proxy
       showModal.value = true
       break
-    case 'genConfig':
-      handleGenConfig(proxy)
-      break
     case 'edit':
       handleEdit(proxy)
       break
@@ -912,91 +766,6 @@ const handleGetFreePortForEdit = async () => {
     gettingFreePort.value = false
   }
 }
-
-const handleCopyConfig = async () => {
-  try {
-    let content = ''
-    // 使用响应式变量判断当前展开的面板
-    if (expandedNames.value.includes('args')) {
-      content = runArgs.value
-    } else if (expandedNames.value.includes('config')) {
-      switch (configFormat.value) {
-        case 'toml':
-          content = tomlContent.value
-          break
-        case 'ini':
-          content = iniContent.value
-          break
-        case 'json':
-          content = jsonContent.value
-          break
-        case 'yml':
-          content = ymlContent.value
-          break
-      }
-    }
-
-    await navigator.clipboard.writeText(content)
-    message.success('已复制到剪贴板')
-  } catch (err) {
-    message.error('复制失败')
-  }
-}
-
-// 添加监听器以在切换配置格式时更新配置内容
-watch(() => configFormat.value, async (newFormat) => {
-  if (!selectedProxy.value || !showConfigModal.value) return
-
-  try {
-    loading.value = true
-userApi.post("/proxy/config", {
-    proxyId: selectedProxy.value.proxyId,
-    type: newFormat
-  }, accessHandle(), (data) => {
-
-    if (data.code === 0) {
-      switch (newFormat) {
-        case 'toml':
-          tomlContent.value = data.data.config
-          break
-        case 'ini':
-          iniContent.value = data.data.config
-          break
-        case 'json':
-          jsonContent.value = data.data.config
-          break
-        case 'yml':
-          ymlContent.value = data.data.config
-          break
-      }
-    } else {
-      message.error(data.message || '获取配置失败')
-    }
-    }, (error) => {
-      message.error(error || '获取配置失败')
-    }, (error) => {
-message.error('获取配置失败:' + error.message)
-    })
-  } catch (error: any) {
-    message.error(error?.response?.data?.message || '获取配置失败')
-  } finally {
-    loading.value = false
-  }
-})
-
-// 添加一个响应式变量来跟踪展开的面板
-const expandedNames = ref(['args'])
-
-// 添加一个监听器来处理折叠面板的互斥
-const handleUpdateExpanded = (names: string[]) => {
-  // 如果尝试展开多个面板，只保留最后一个
-  if (names.length > 1) {
-    expandedNames.value = [names[names.length - 1]]
-  } else {
-    expandedNames.value = names
-  }
-}
-
 const openUrl = (protocol: string, domain: string) => {
   window.open(`${protocol}://${domain}`, '_blank')
 }
@@ -1156,6 +925,10 @@ const columns = [
   }
 ]
 const handleStarProxy = async (proxy: Proxy) => {
+  if (proxy.isDisabled) {
+    message.error('此隧道已被禁用，请先启用后再操作');
+    return
+  }
   try {
     loading.value = true;
     if (!proxy.isOnline) {
@@ -1168,6 +941,14 @@ const handleStarProxy = async (proxy: Proxy) => {
       if (success) {
         message.info('正在尝试启动隧道');
       }
+      setTimeout(() => {
+        handleRefresh();
+        if (!proxy.isOnline) {
+          message.success('隧道启动成功');
+        } else {
+          message.error('隧道启动失败，请检查配置或网络连接');
+        }
+      }, 200);
     } else {
       const success = await invoke('stop_proxy', { 
         proxyId: proxy.proxyId 
@@ -1191,5 +972,159 @@ const handleStarProxy = async (proxy: Proxy) => {
 </script>
 
 <style lang="scss" scoped>
-@use "../../../assets/styles/manageTunnel.scss";
+
+@use '../../../assets/styles/variables' as *;
+
+.proxies {
+  .toolbar {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+
+    .search-box {
+      flex: 1;
+    }
+
+    .toolbar-right {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+  }
+
+  .proxy-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(254px, 1fr));
+    gap: 16px;
+    min-height: 200px;
+
+    &:empty,
+    > .no-data:only-child {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  }
+
+  .proxy-card {
+    position: relative;
+    padding-bottom: 48px;
+
+    .proxy-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+
+      h3 {
+        margin: 0;
+        font-size: 16px;
+      }
+    }
+
+    .proxy-info {
+      .info-item {
+        display: flex;
+        margin-bottom: 8px;
+        align-items: center;
+
+        .label {
+          color: $text-color-2;
+          width: 80px;
+        }
+
+        .value {
+          flex: 1;
+        }
+      }
+    }
+
+    .proxy-actions {
+      position: absolute;
+      bottom: 22px;
+      left: 0;
+      right: 8px;
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      padding: 0 16px;
+      background: $bg-color;
+    }
+  }
+
+  .action-btn {
+    margin-right: 8px;
+
+    &:last-child {
+      margin-right: 0;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .toolbar {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+
+      .toolbar-right {
+        justify-content: space-between;
+      }
+    }
+
+    .proxy-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 387px) {
+    .view-suffix {
+      display: none;
+    }
+  }
+}
+
+.proxy-detail-container {
+  display: flex;
+  gap: 24px;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+
+  .proxy-detail-left {
+    flex: 1.2;
+  }
+
+  .proxy-detail-right {
+    flex: 1.5;
+    min-width: 300px;
+
+    @media (max-width: 768px) {
+      min-width: unset;
+    }
+  }
+}
+
+.modal-info-item {
+  margin-bottom: 12px;
+
+  .label {
+    color: $text-color-2;
+    margin-right: 8px;
+  }
+}
+
+.no-data {
+  margin: 48px 0;
+  width: 100%;
+  text-align: center;
+  
+  :deep(.n-empty) {
+    font-size: 0.95rem;
+  }
+}
 </style>

@@ -20,7 +20,7 @@
         </NFormItem>
         <div class="checkbox-forgot">
           <!-- <router-link to="/forget" class="forgot-link" style="color: #1976D2">忘记密码？</router-link> -->
-           <a href="#" class="forgot-link" @click.prevent="OpenBrowser('https://www.lyfrp.cn/forget')">忘记密码？</a>
+           <a href="#" class="forgot-link" @click.prevent="OpenBrowser(packageData.url + '/forget')">忘记密码？</a>
            <p></p>
         </div>
         <NButton :loading="loading" type="primary" block secondary strong @click="handleSubmit">
@@ -28,7 +28,7 @@
         </NButton>
         <div class="form-footer register-link">
           <span>还没有账号？</span>
-          <a href="#" @click.prevent="OpenBrowser('https://www.lyfrp.cn/login')">立即注册</a>
+          <a href="#" @click.prevent="OpenBrowser(packageData.url + '/login')">立即注册</a>
         </div>
       </NForm>
     </NCard>
@@ -53,6 +53,7 @@
 
 
 <script setup lang="ts">
+import packageData from '../../package.json';
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { NForm, NFormItem, NInput, NButton, NCard, NIcon, type FormRules, useMessage, type FormInst } from 'naive-ui'

@@ -4,7 +4,7 @@
     <div class="navbar-content">
       <div class="logo" style="margin-left: 20px;">
         <RouterLink to="/" class="logo-link">
-          <h2>LingYunFRP</h2>
+          <h2>{{ packageData.title }}</h2>
         </RouterLink>
       </div>
 
@@ -63,7 +63,7 @@
       </NPopover>
       <div class="logo">
         <RouterLink to="/" class="logo-link">
-          <h2>LingYunFRP</h2>
+          <h2>{{ packageData.title }}</h2>
         </RouterLink>
       </div>
     </div>
@@ -82,6 +82,7 @@
 </template>
 
 <script setup lang="ts">
+import packageData from '../../package.json'
 import { h, inject, Ref, ref } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import { NLayoutHeader, NButton, NSpace, NSwitch, NIcon, NPopover, NMenu, MenuOption, NModal } from 'naive-ui'

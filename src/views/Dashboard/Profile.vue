@@ -779,9 +779,6 @@ const handleSendPhoneCode = async () => {
     background-color: #b392f0;
     cursor: pointer;
     
-    &:hover {
-      background-color: darken(#b392f0, 10%);
-    }
   }
 }
 
